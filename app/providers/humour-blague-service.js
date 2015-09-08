@@ -38,7 +38,7 @@ function futureJoke() {
 	    	var domUtils = require('htmlparser2').DomUtils;
 	    	var handler = new htmlparser.DomHandler(function(err, dom) {
 	    		var blagues = domUtils.findAll(function (elem) {
-	                if(elem.attribs.class === 'blague') {
+	                if(elem.attribs && elem.attribs.class === 'blague') {
 	                    return true;
 	                }
 	                return false;
@@ -47,7 +47,9 @@ function futureJoke() {
 	            var toSend = [];
 	            blagues[0].children.forEach(function(e) {
 	            	if(e.type === 'text') {
-	            		toSend.push(entities.decode(e.data));
+	            		var text = entities.decode(e.data.trim());
+	            		text = text.replace(/\s*\n\s*/, ' ');
+	            		toSend.push(text);
 	            	}
 	            });
 	            deferred.resolve(toSend);

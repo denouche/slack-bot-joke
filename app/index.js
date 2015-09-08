@@ -6,7 +6,8 @@ var Slack = require('slack-client'),
     token = process.env.SLACK_TOKEN,
     providers = [
     	require('./providers/humour-blague-service.js'),
-    	require('./providers/marrez-vous-service.js')
+    	require('./providers/marrez-vous-service.js'),
+        require('./providers/labanane-service.js')
     ];
 
 var slack = new Slack(token, true, true),
@@ -42,6 +43,22 @@ slack.on('open', function () {
        console.info('As well as: ' + groups.join(', '));
     }
 });
+
+function sendMessages(channel, arrayToSend) {
+    setTimeout(function(e) {
+        var toSend = arrayToSend.shift();
+        if(toSend !== undefined) {
+            channel.send(toSend);
+        }
+        if(arrayToSend.length > 0) {
+            sendMessages(channel, arrayToSend);
+        }
+    }, 50);
+}
+
+slack.on('error', function(error) {
+    console.error(error);
+});
  
 slack.on('message', function(message) {
     var channel = slack.getChannelGroupOrDMByID(message.channel);
@@ -52,9 +69,7 @@ slack.on('message', function(message) {
         	console.info('blague asked by', user.name);
         	getProvider().getJoke(providersOption)
                 .then(function(data) {
-                    data.forEach(function(e) {
-                        channel.send(e);
-                    })
+                    sendMessages(channel, data);
                 })
         }
     }
