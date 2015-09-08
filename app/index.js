@@ -4,11 +4,12 @@ require('console-stamp')(console);
 
 var Slack = require('slack-client'),
     token = process.env.SLACK_TOKEN,
-    providers = [
-    	require('./providers/humour-blague-service.js'),
-    	require('./providers/marrez-vous-service.js'),
-        require('./providers/labanane-service.js')
-    ];
+    jokeProviders = [
+    	require('./jokes/providers/humour-blague-service.js'),
+    	require('./jokes/providers/marrez-vous-service.js'),
+        require('./jokes/providers/labanane-service.js')
+    ],
+    kittens = require('./kittens/ditesleavecdeschatons-service.js');
 
 var slack = new Slack(token, true, true),
     providersOption = {
@@ -16,7 +17,7 @@ var slack = new Slack(token, true, true),
     };
 
 function getProvider() {
-	return providers[Math.floor(Math.random() * providers.length)]
+	return jokeProviders[Math.floor(Math.random() * jokeProviders.length)]
 }
  
 slack.on('open', function () {
@@ -65,12 +66,27 @@ slack.on('message', function(message) {
     var user = slack.getUserByID(message.user);
 
     if (message.type === 'message') {
-        if(message.text === 'blague') {
-        	console.info('blague asked by', user.name);
-        	getProvider().getJoke(providersOption)
-                .then(function(data) {
-                    sendMessages(channel, data);
-                })
+        switch(message.text) {
+            case 'blague':
+                console.info('blague asked by', user.name);
+                getProvider().getJoke(providersOption)
+                    .then(function(data) {
+                        sendMessages(channel, data);
+                    })
+                break;
+            case 'chaton':
+                kittens.getLink()
+                    .then(function(data) {
+                        channel.postMessage({
+                            attachments: [
+                                {
+                                    fallback: 'ditesleavecdeschatons',
+                                    'image_url': data
+                                }
+                            ]
+                        });
+                    })
+                break;
         }
     }
 });
