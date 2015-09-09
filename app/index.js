@@ -10,7 +10,7 @@ var Slack = require('slack-client'),
         require('./jokes/providers/labanane-service.js')
     ],
     chatons = require('./chatons/ditesleavecdeschatons-service.js'),
-    kittens = require('./kittens/explodingkittens-service.js');
+    catchall = require('./catchall/catchall-service.js');
 
 var slack = new Slack(token, true, true),
     providersOption = {
@@ -90,7 +90,7 @@ slack.on('message', function(message) {
                     });
                 break;
             default:
-                kittens.getImageForWord(message.text.toLowerCase())
+                catchall.getImageForWord(message.text.toLowerCase())
                     .then(function(data) {
                         channel.postMessage({
                             as_user: true,
