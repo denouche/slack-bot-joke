@@ -9,7 +9,8 @@ var Slack = require('slack-client'),
     	require('./jokes/providers/marrez-vous-service.js'),
         require('./jokes/providers/labanane-service.js')
     ],
-    kittens = require('./kittens/ditesleavecdeschatons-service.js');
+    chatons = require('./chatons/ditesleavecdeschatons-service.js'),
+    kittens = require('./kittens/explodingkittens-service.js');
 
 var slack = new Slack(token, true, true),
     providersOption = {
@@ -17,7 +18,7 @@ var slack = new Slack(token, true, true),
     };
 
 function getProvider() {
-	return jokeProviders[Math.floor(Math.random() * jokeProviders.length)]
+	return jokeProviders[Math.floor(Math.random() * jokeProviders.length)];
 }
  
 slack.on('open', function () {
@@ -66,7 +67,7 @@ slack.on('message', function(message) {
     var user = slack.getUserByID(message.user);
 
     if (message.type === 'message') {
-        switch(message.text) {
+        switch(message.text.toLowerCase()) {
             case 'blague':
                 console.info('blague asked by', user.name);
                 getProvider().getJoke(providersOption)
@@ -75,17 +76,32 @@ slack.on('message', function(message) {
                     })
                 break;
             case 'chaton':
-                kittens.getLink()
+                chatons.getLink()
                     .then(function(data) {
                         channel.postMessage({
+                            as_user: true,
                             attachments: [
                                 {
-                                    fallback: 'ditesleavecdeschatons',
+                                    fallback: 'chaton: ' + data,
                                     'image_url': data
                                 }
                             ]
                         });
-                    })
+                    });
+                break;
+            default:
+                kittens.getImageForWord(message.text.toLowerCase())
+                    .then(function(data) {
+                        channel.postMessage({
+                            as_user: true,
+                            attachments: [
+                                {
+                                    fallback: 'nope: ' + data,
+                                    'image_url': data
+                                }
+                            ]
+                        });
+                    });
                 break;
         }
     }
