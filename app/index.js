@@ -10,6 +10,7 @@ var Slack = require('slack-client'),
         require('./jokes/providers/labanane-service.js')
     ],
     chatons = require('./chatons/ditesleavecdeschatons-service.js'),
+    ascii = require('./ascii/ascii-service.js'),
     catchall = require('./catchall/catchall-service.js');
 
 var slack = new Slack(token, true, true),
@@ -103,6 +104,14 @@ slack.on('message', function(message) {
                         });
                     });
                 break;
+        };
+
+console.log('"'+message.text.toLowerCase()+'"');
+        if(/^ascii\s+.*$/.test(message.text.toLowerCase())) {
+            var toConvert = message.text.match(/^ascii\s+(.*)$/)[1];
+            ascii.getAscii(toConvert).then(function(converted) {
+                channel.send('-\n'+converted);
+            });
         }
     }
 });
