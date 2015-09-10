@@ -68,16 +68,16 @@ slack.on('message', function(message) {
     var user = slack.getUserByID(message.user);
 
     if (message.type === 'message') {
+        var futureFound;
         switch(message.text.toLowerCase()) {
             case 'blague':
-                console.info('blague asked by', user.name);
-                getProvider().getJoke(providersOption)
+                futureFound = getProvider().getJoke(providersOption)
                     .then(function(data) {
                         sendMessages(channel, data);
                     });
                 break;
             case 'chaton':
-                chatons.getLink()
+                futureFound = chatons.getLink()
                     .then(function(data) {
                         channel.postMessage({
                             as_user: true,
@@ -91,7 +91,7 @@ slack.on('message', function(message) {
                     });
                 break;
             default:
-                catchall.getImageForWord(message.text.toLowerCase())
+                futureFound = catchall.getImageForWord(message.text.toLowerCase())
                     .then(function(data) {
                         channel.postMessage({
                             as_user: true,
@@ -102,17 +102,17 @@ slack.on('message', function(message) {
                                 }
                             ]
                         });
-                    }, function() {
-                        // If no catchall, test this sometimes ...
-                        if(Math.random() < 0.3) {
-                            poils.getResponse(message.text.toLowerCase())
-                                .then(function(data) {
-                                    channel.send(data);
-                                });
-                        }
                     });
                 break;
         }
+        futureFound.then(function() {
+            // Do nothing
+        }, function() {
+            poils.getResponse(message.text.toLowerCase())
+                .then(function(data) {
+                    channel.send(data);
+                });
+        });
     }
 });
 
