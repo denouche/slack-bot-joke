@@ -10,7 +10,8 @@ var Slack = require('slack-client'),
         require('./jokes/providers/labanane-service.js')
     ],
     chatons = require('./chatons/ditesleavecdeschatons-service.js'),
-    catchall = require('./catchall/catchall-service.js');
+    catchall = require('./catchall/catchall-service.js'),
+    poils = require('./poils/poils-service.js');
 
 var slack = new Slack(token, true, true),
     providersOption = {
@@ -73,7 +74,7 @@ slack.on('message', function(message) {
                 getProvider().getJoke(providersOption)
                     .then(function(data) {
                         sendMessages(channel, data);
-                    })
+                    });
                 break;
             case 'chaton':
                 chatons.getLink()
@@ -101,6 +102,14 @@ slack.on('message', function(message) {
                                 }
                             ]
                         });
+                    }, function() {
+                        // If no catchall, test this sometimes ...
+                        if(Math.random() < 0.3) {
+                            poils.getResponse(message.text.toLowerCase())
+                                .then(function(data) {
+                                    channel.send(data);
+                                });
+                        }
                     });
                 break;
         }
