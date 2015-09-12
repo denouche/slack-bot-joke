@@ -3,29 +3,23 @@ var q = require('q'),
 
 var dict = {
     dos: [
-        'eau',
-        'eaux',
-        'au',
-        'aux',
-        'o',
+        'eau', 'eaux',
+        'au', 'aux',
+        'o', 'os',
         'ot',
-        'os',
         'aut'
     ],
     dents: [
-        'ent',
-        'ents',
-        'ant',
-        'ants',
-        'an',
-        'ans'
+        'ent', 'ents',
+        'ant', 'ants',
+        'an', 'ans'
     ],
     nez: [
-        'é',
-        'és',
-        'ées',
+        'é', 'és', 'ées',
         'et',
-        'er'
+        'er',
+        'ait', 'aient',
+        'ai', 'ais'
     ],
     aisselles: [
         'elles',
@@ -38,24 +32,18 @@ var dict = {
         'esses'
     ],
     bras: [
-        'a',
-        'as',
-        'at',
-        'ats'
+        'à', 'a', 'as',
+        'at', 'ats',
+        'oi', 'ois'
     ],
     front: [
-        'on',
-        'ont',
-        'ons',
-        'onts'
+        'on', 'ons',
+        'ont', 'onts'
     ],
     cou: [
-        'oup',
-        'oups',
-        'out',
-        'outs',
-        'ou',
-        'ous'
+        'oup', 'oups',
+        'out', 'outs',
+        'ou', 'ous'
     ]
 };
 
