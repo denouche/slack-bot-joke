@@ -34,7 +34,8 @@ var dict = {
     bras: [
         'à', 'a', 'as',
         'at', 'ats',
-        'oi', 'ois'
+        'oi', 'ois',
+        'ah', 'ha'
     ],
     front: [
         'on', 'ons',
@@ -44,6 +45,10 @@ var dict = {
         'oup', 'oups',
         'out', 'outs',
         'ou', 'ous'
+    ],
+    mains: [
+        'in', 'ins',
+        'int', 'ints'
     ]
 };
 
