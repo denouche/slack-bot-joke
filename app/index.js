@@ -12,7 +12,8 @@ var Slack = require('slack-client'),
     chatons = require('./chatons/ditesleavecdeschatons-service.js'),
     catchall = require('./catchall/catchall-service.js'),
     poils = require('./poils/poils-service.js'),
-    excusesdedev = require('./excusesdedev/excusesdedev-service.js');
+    excusesdedev = require('./excusesdedev/excusesdedev-service.js'),
+    citation = require('./kaakook/kaakook-service');
 
 var slack = new Slack(token, true, true),
     providersOption = {
@@ -84,6 +85,13 @@ slack.on('message', function(message) {
                 futureFound = excusesdedev.getExcuse()
                     .then(function(data) {
                         channel.send(data);
+                    });
+                break;
+            case 'citation':
+            case 'film':
+                futureFound = citation.getCitation()
+                    .then(function(data) {
+                        sendMessages(channel, data);
                     });
                 break;
             case 'chaton':
