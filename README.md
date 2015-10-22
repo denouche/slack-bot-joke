@@ -1,6 +1,17 @@
 slack-bot-joke
 ==============
 
+Just tell :
+```
+blague
+chaton
+nope
+excuse
+film
+```
+
+And enjoy the answer!
+
 ## Build the image
 
 ```bash
