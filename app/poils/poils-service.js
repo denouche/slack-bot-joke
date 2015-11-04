@@ -19,7 +19,7 @@ var dict = {
         'et',
         'er',
         'ait', 'aient',
-        'ai', 'ais', 'aies'
+        'ai', 'ais', 'aie', 'aies'
     ],
     aisselles: [
         'elles',
