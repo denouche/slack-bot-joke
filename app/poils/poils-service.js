@@ -49,6 +49,9 @@ var dict = {
     mains: [
         'in', 'ins',
         'int', 'ints'
+    ],
+    yeux: [
+        'ieu', 'ieux'
     ]
 };
 
