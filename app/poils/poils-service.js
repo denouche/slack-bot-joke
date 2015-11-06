@@ -51,7 +51,10 @@ var dict = {
         'int', 'ints'
     ],
     yeux: [
-        'ieu', 'ieux'
+        'eu', 'eux',
+        'euh', 'heu',
+        'eud', 'euds',
+        'eut'
     ]
 };
 
