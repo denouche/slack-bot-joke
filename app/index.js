@@ -13,6 +13,7 @@ var Slack = require('slack-client'),
     catchall = require('./catchall/catchall-service.js'),
     poils = require('./poils/poils-service.js'),
     excusesdedev = require('./excusesdedev/excusesdedev-service.js'),
+    savoirinutile = require('./savoirinutile/savoirinutile-service.js'),
     citation = require('./kaakook/kaakook-service');
 
 var slack = new Slack(token, true, true),
@@ -23,27 +24,27 @@ var slack = new Slack(token, true, true),
 function getProvider() {
 	return jokeProviders[Math.floor(Math.random() * jokeProviders.length)];
 }
- 
+
 slack.on('open', function () {
     var channels = Object.keys(slack.channels)
         .map(function (k) { return slack.channels[k]; })
         .filter(function (c) { return c.is_member; })
         .map(function (c) { return c.name; });
- 
+
     var groups = Object.keys(slack.groups)
         .map(function (k) { return slack.groups[k]; })
         .filter(function (g) { return g.is_open && !g.is_archived; })
         .map(function (g) { return g.name; });
- 
+
     console.info('Welcome to Slack. You are ' + slack.self.name + ' of ' + slack.team.name);
- 
+
     if (channels.length > 0) {
         console.info('You are in: ' + channels.join(', '));
     }
     else {
         console.info('You are not in any channels.');
     }
- 
+
     if (groups.length > 0) {
        console.info('As well as: ' + groups.join(', '));
     }
@@ -64,7 +65,7 @@ function sendMessages(channel, arrayToSend) {
 slack.on('error', function(error) {
     console.error(error);
 });
- 
+
 slack.on('message', function(message) {
     var channel = slack.getChannelGroupOrDMByID(message.channel);
     var user = slack.getUserByID(message.user);
@@ -76,6 +77,13 @@ slack.on('message', function(message) {
                 futureFound = getProvider().getJoke(providersOption)
                     .then(function(data) {
                         sendMessages(channel, data);
+                    });
+                break;
+            case 'inutile':
+            case 'savoir':
+                futureFound = savoirinutile.getSavoirInutile()
+                    .then(function(data) {
+                        channel.send(data);
                     });
                 break;
             case 'excuse':
@@ -135,4 +143,3 @@ slack.on('message', function(message) {
 });
 
 slack.login();
-
