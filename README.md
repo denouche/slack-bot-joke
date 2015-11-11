@@ -8,6 +8,7 @@ chaton
 nope
 excuse
 film
+inutile
 ```
 
 And enjoy the answer!
@@ -25,4 +26,3 @@ docker run --rm -it -e SLACK_TOKEN='xxxxxxxxxxxxxxxxx' myimage
 ```bash
 docker run --rm -it -e SLACK_TOKEN='xxxxxxxxxxxxxxxxx' denouche/slack-bot:clown
 ```
-
