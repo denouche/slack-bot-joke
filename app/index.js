@@ -4,17 +4,14 @@ require('console-stamp')(console);
 
 var Slack = require('slack-client'),
     token = process.env.SLACK_TOKEN,
-    jokeProviders = [
-    	require('./jokes/providers/humour-blague-service.js'),
-    	require('./jokes/providers/marrez-vous-service.js'),
-        require('./jokes/providers/labanane-service.js')
-    ],
-    chatons = require('./chatons/ditesleavecdeschatons-service.js'),
     catchall = require('./catchall/catchall-service.js'),
-    poils = require('./poils/poils-service.js'),
-    excusesdedev = require('./excusesdedev/excusesdedev-service.js'),
-    savoirinutile = require('./savoirinutile/savoirinutile-service.js'),
-    citation = require('./kaakook/kaakook-service');
+    serviceFactory = require('./servicefactory/service-factory.js'),
+    jokeProviders = serviceFactory.getService("jokeProviders"),
+    chatons = serviceFactory.getService("chatons"),
+    poils = serviceFactory.getService("poils"),
+    excusesdedev = serviceFactory.getService("excusesdedev"),
+    savoirinutile = serviceFactory.getService("savoirinutile"),
+    citation = serviceFactory.getService("citation");
 
 var slack = new Slack(token, true, true),
     providersOption = {
