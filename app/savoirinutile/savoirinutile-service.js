@@ -48,4 +48,4 @@ function getSavoirInutile() {
 	return deferred.promise;
 }
 
-exports.getSavoirInutile = getSavoirInutile;
+exports.get = getSavoirInutile;

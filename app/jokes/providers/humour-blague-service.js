@@ -63,4 +63,4 @@ function futureJoke() {
 	return deferred.promise;
 }
 
-exports.getJoke = getJoke;
+exports.get = getJoke;

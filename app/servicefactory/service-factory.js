@@ -1,37 +1,36 @@
 var q = require('q'),
     _ = require('lodash'),
-    services = process.env.BOT_SERVICES,
-    jokeProviders = [
+    services = process.env.BOT_SERVICES ? process.env.BOT_SERVICES.split(',') : null;
+
+var existingServices = {
+    'blagues': [
         require('../jokes/providers/humour-blague-service.js'),
         require('../jokes/providers/marrez-vous-service.js'),
         require('../jokes/providers/labanane-service.js')
     ],
-    chatons = require('../chatons/ditesleavecdeschatons-service.js'),
-    poils = require('../poils/poils-service.js'),
-    excusesdedev = require('../excusesdedev/excusesdedev-service.js'),
-    savoirinutile = require('../savoirinutile/savoirinutile-service.js'),
-    citation = require('../kaakook/kaakook-service.js'),
-    mock = require('./mock.js');
-
-var existingServices = {
-    "jokeProviders": jokeProviders,
-    "chatons": chatons,
-    "poils": poils,
-    "excusesdedev": excusesdedev,
-    "savoirinutile": savoirinutile,
-    "citation": citation
+    'chatons': require('../chatons/ditesleavecdeschatons-service.js'),
+    'poils': require('../poils/poils-service.js'),
+    'excusesdedev': require('../excusesdedev/excusesdedev-service.js'),
+    'savoirinutile': require('../savoirinutile/savoirinutile-service.js'),
+    'citations': require('../kaakook/kaakook-service.js')
 };
 
-if (services) {
-    services = services.split(',');
+function getMock() {
+    return {
+        get: function() {
+            var deferred = q.defer();
+            deferred.reject();
+            return deferred.promise;
+        }
+    };
 }
 
 function getService(serviceName) {
-    if (services && !_.contains(services, serviceName)) {
-        if (existingServices[serviceName] && Array.isArray(existingServices[serviceName])){
-            return new Array(mock);
+    if (services && !_.includes(services, serviceName)) {
+        if (_.isArray(existingServices[serviceName])){
+            return [getMock()];
         }
-        return mock;
+        return getMock();
     }
     return existingServices[serviceName];
 }

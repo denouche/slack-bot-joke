@@ -79,4 +79,4 @@ function getResponse(word) {
     return deferred.promise;
 }
 
-exports.getResponse = getResponse;
+exports.get = getResponse;

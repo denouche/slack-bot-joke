@@ -74,4 +74,4 @@ function getJoke(options) {
 	return deferred.promise;
 }
 
-exports.getJoke = getJoke;
+exports.get = getJoke;

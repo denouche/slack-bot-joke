@@ -48,4 +48,4 @@ function getExcuse() {
 	return deferred.promise;
 }
 
-exports.getExcuse = getExcuse;
+exports.get = getExcuse;

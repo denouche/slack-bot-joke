@@ -50,4 +50,4 @@ function getCitation() {
 	return deferred.promise;
 }
 
-exports.getCitation = getCitation;
+exports.get = getCitation;

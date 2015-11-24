@@ -6,21 +6,18 @@ var Slack = require('slack-client'),
     token = process.env.SLACK_TOKEN,
     catchall = require('./catchall/catchall-service.js'),
     serviceFactory = require('./servicefactory/service-factory.js'),
-    jokeProviders = serviceFactory.getService("jokeProviders"),
-    chatons = serviceFactory.getService("chatons"),
-    poils = serviceFactory.getService("poils"),
-    excusesdedev = serviceFactory.getService("excusesdedev"),
-    savoirinutile = serviceFactory.getService("savoirinutile"),
-    citation = serviceFactory.getService("citation");
+    jokeProviders = serviceFactory.getService('blagues'),
+    chatons = serviceFactory.getService('chatons'),
+    poils = serviceFactory.getService('poils'),
+    excusesdedev = serviceFactory.getService('excusesdedev'),
+    savoirinutile = serviceFactory.getService('savoirinutile'),
+    citation = serviceFactory.getService('citations');
 
 var slack = new Slack(token, true, true),
     providersOption = {
         maxLength: 600
     };
 
-function getProvider() {
-	return jokeProviders[Math.floor(Math.random() * jokeProviders.length)];
-}
 
 slack.on('open', function () {
     var channels = Object.keys(slack.channels)
@@ -71,14 +68,14 @@ slack.on('message', function(message) {
         var futureFound;
         switch(message.text.toLowerCase()) {
             case 'blague':
-                futureFound = getProvider().getJoke(providersOption)
+                futureFound = jokeProviders[Math.floor(Math.random() * jokeProviders.length)].get(providersOption)
                     .then(function(data) {
                         sendMessages(channel, data);
                     });
                 break;
             case 'inutile':
             case 'savoir':
-                futureFound = savoirinutile.getSavoirInutile()
+                futureFound = savoirinutile.get()
                     .then(function(data) {
                         channel.send(data);
                     });
@@ -87,20 +84,20 @@ slack.on('message', function(message) {
             case 'excuses':
             case 'dev':
             case 'devs':
-                futureFound = excusesdedev.getExcuse()
+                futureFound = excusesdedev.get()
                     .then(function(data) {
                         channel.send(data);
                     });
                 break;
             case 'citation':
             case 'film':
-                futureFound = citation.getCitation()
+                futureFound = citation.get()
                     .then(function(data) {
                         sendMessages(channel, data);
                     });
                 break;
             case 'chaton':
-                futureFound = chatons.getLink()
+                futureFound = chatons.get()
                     .then(function(data) {
                         channel.postMessage({
                             as_user: true,
@@ -114,7 +111,7 @@ slack.on('message', function(message) {
                     });
                 break;
             default:
-                futureFound = catchall.getImageForWord(message.text.toLowerCase())
+                futureFound = catchall.get(message.text.toLowerCase())
                     .then(function(data) {
                         channel.postMessage({
                             as_user: true,
@@ -131,7 +128,7 @@ slack.on('message', function(message) {
         futureFound.then(function() {
             // Do nothing
         }, function() {
-            poils.getResponse(message.text.toLowerCase())
+            poils.get(message.text.toLowerCase())
                 .then(function(data) {
                     channel.send(data);
                 });

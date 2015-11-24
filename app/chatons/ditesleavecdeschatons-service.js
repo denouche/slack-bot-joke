@@ -62,4 +62,4 @@ function getLink() {
 	return deferred.promise;
 }
 
-exports.getLink = getLink;
+exports.get = getLink;

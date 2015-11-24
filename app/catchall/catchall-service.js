@@ -26,5 +26,5 @@ function getImageForWord(word) {
 	return deferred.promise;
 }
 
-exports.getImageForWord = getImageForWord;
+exports.get = getImageForWord;
 
