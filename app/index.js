@@ -75,6 +75,7 @@ slack.on('message', function(message) {
                 break;
             case 'inutile':
             case 'savoir':
+            case 'savoir inutile':
                 futureFound = savoirinutile.get()
                     .then(function(data) {
                         channel.send(data);
@@ -84,6 +85,10 @@ slack.on('message', function(message) {
             case 'excuses':
             case 'dev':
             case 'devs':
+            case 'excuse de dev':
+            case 'excuses de dev':
+            case 'excuse de devs':
+            case 'excuses de devs':
                 futureFound = excusesdedev.get()
                     .then(function(data) {
                         channel.send(data);
