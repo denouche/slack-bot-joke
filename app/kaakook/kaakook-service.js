@@ -1,11 +1,12 @@
 var htmlparser = require('htmlparser2'),
 	request = require('request'),
-	q = require('q');
+	q = require('q'),
+    _ = require('lodash');
 
-function getCitation() {
+function getCitation(url) {
 	var deferred = q.defer();
 	request({
-	    url: 'http://www.kaakook.fr/',
+	    url: url || 'http://www.kaakook.fr/',
 	    method: 'GET',
 	    gzip: true,
 	    headers: {
@@ -24,7 +25,13 @@ function getCitation() {
 	    	var domUtils = require('htmlparser2').DomUtils;
 	    	var handler = new htmlparser.DomHandler(function(err, dom) {
 	    		var quote = domUtils.findAll(function (elem) {
-	                if(elem.attribs && elem.attribs.class === 'citation') {
+	                if(elem.attribs && elem.attribs.class === 'corps') {
+	                    return true;
+	                }
+	                return false;
+	            }, dom);
+	    		var signature = domUtils.findAll(function (elem) {
+	                if(elem.attribs && elem.attribs.class === 'signature') {
 	                    return true;
 	                }
 	                return false;
@@ -32,9 +39,29 @@ function getCitation() {
 
 				var toSend = [];
 	    		if(quote.length > 0 
-	    			&& quote[0].children.length > 0) {
-					toSend.push(quote[0].children[1].children[1].children[0].data.trim());
-					toSend.push(quote[0].children[3].children[1].children[0].children[0].data.trim() + quote[0].children[3].children[2].data.trim());
+	    			&& quote[0].children.length > 0
+                    && signature.length > 0
+                    && signature[0].children.length > 2) {
+
+                    if(quote[0].children.length > 1 && quote[0].children[1].name === 'a') {
+                        // la citation est un lien, on va chercher le texte dans le lien
+                        toSend.push(quote[0].children[1].children[0].data.trim());
+                    }
+                    else {
+                        // on prend les childs en text
+                        _.filter(quote[0].children, function(e) {
+                            return e.type === 'text';
+                        });
+                        quote[0].children.forEach(function(e) {
+                            if(e.type === 'text') {
+                                toSend.push(e.data.trim());
+                            }
+                            else if(e.type === 'tag' && e.children.length > 0 && e.children[0].type === 'text') {
+                                toSend.push(e.children[0].data.trim());
+                            }
+                        });
+                    }
+                    toSend.push(signature[0].children[1].children[0].children[0].data.trim() + signature[0].children[2].data.trim());
 	    			deferred.resolve(toSend);
 	    		} 
                 else {

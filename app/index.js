@@ -11,7 +11,8 @@ var Slack = require('slack-client'),
     poils = serviceFactory.getService('poils'),
     excusesdedev = serviceFactory.getService('excusesdedev'),
     savoirinutile = serviceFactory.getService('savoirinutile'),
-    citation = serviceFactory.getService('citations');
+    citation = serviceFactory.getService('citations'),
+    citationInverse = serviceFactory.getService('citationsinverse');
 
 var slack = new Slack(token, true, true),
     providersOption = {
@@ -65,43 +66,45 @@ slack.on('message', function(message) {
     var user = slack.getUserByID(message.user);
 
     if (message.type === 'message') {
-        var futureFound;
-        switch(message.text.toLowerCase()) {
-            case 'blague':
+        var futureFound,
+            text = message.text.toLowerCase();
+        switch(true) {
+            case /blague/.test(text):
                 futureFound = jokeProviders[Math.floor(Math.random() * jokeProviders.length)].get(providersOption)
                     .then(function(data) {
                         sendMessages(channel, data);
                     });
                 break;
-            case 'inutile':
-            case 'savoir':
-            case 'savoir inutile':
+            case /^savoir(?: inutile)?$/.test(text):
+            case /inutile/.test(text):
                 futureFound = savoirinutile.get()
                     .then(function(data) {
                         channel.send(data);
                     });
                 break;
-            case 'excuse':
-            case 'excuses':
-            case 'dev':
-            case 'devs':
-            case 'excuse de dev':
-            case 'excuses de dev':
-            case 'excuse de devs':
-            case 'excuses de devs':
+            case /^excuses?(?: de devs?)?$/.test(text):
+            case /^devs?$/.test(text):
                 futureFound = excusesdedev.get()
                     .then(function(data) {
                         channel.send(data);
                     });
                 break;
-            case 'citation':
-            case 'film':
+            case /^citation$/.test(text):
+            case /^film$/.test(text):
                 futureFound = citation.get()
                     .then(function(data) {
                         sendMessages(channel, data);
                     });
                 break;
-            case 'chaton':
+            case /^citation\s.+$/.test(text):
+            case /^film\s.+$/.test(text):
+                var matcher = text.match(/^citation\s(.+)$/) || text.match(/^film\s(.+)$/);
+                futureFound = citationInverse.get(matcher[1])
+                    .then(function(data) {
+                        sendMessages(channel, data);
+                    });
+                break;
+            case /^chaton$/.test(text):
                 futureFound = chatons.get()
                     .then(function(data) {
                         channel.postMessage({
@@ -116,7 +119,7 @@ slack.on('message', function(message) {
                     });
                 break;
             default:
-                futureFound = catchall.get(message.text.toLowerCase())
+                futureFound = catchall.get(text)
                     .then(function(data) {
                         channel.postMessage({
                             as_user: true,
@@ -133,7 +136,7 @@ slack.on('message', function(message) {
         futureFound.then(function() {
             // Do nothing
         }, function() {
-            poils.get(message.text.toLowerCase())
+            poils.get(text)
                 .then(function(data) {
                     channel.send(data);
                 });
