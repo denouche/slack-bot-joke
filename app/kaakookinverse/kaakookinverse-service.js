@@ -20,7 +20,12 @@ function searchGoogle(citation) {
                 var result =_.find(links, function(link) {
                     return /^http:\/\/www\.kaakook\.fr\/citation-.*/.test(link.link);
                 });
-                deferred.resolve(result.link);
+                if(result) {
+                    deferred.resolve(result.link);
+                }
+                else {
+                    deferred.resolve();
+                }
             }
         }
     });
