@@ -12,7 +12,8 @@ var existingServices = {
     'poils': require('../poils/poils-service.js'),
     'excusesdedev': require('../excusesdedev/excusesdedev-service.js'),
     'savoirinutile': require('../savoirinutile/savoirinutile-service.js'),
-    'citations': require('../kaakook/kaakook-service.js')
+    'citations': require('../kaakook/kaakook-service.js'),
+    'citationsinverse': require('../kaakookinverse/kaakookinverse-service.js')
 };
 
 function getMock() {
