@@ -2,8 +2,11 @@
 
 require('console-stamp')(console);
 
-var Slack = require('slack-client'),
-    token = process.env.SLACK_TOKEN,
+var RtmClient = require('@slack/client').RtmClient,
+    CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS,
+    RTM_EVENTS = require('@slack/client').RTM_EVENTS,
+    WebClient = require('@slack/client').WebClient,
+    Bottleneck = require('bottleneck'),
     catchall = require('./catchall/catchall-service.js'),
     serviceFactory = require('./servicefactory/service-factory.js'),
     jokeProviders = serviceFactory.getService('blagues'),
@@ -13,150 +16,208 @@ var Slack = require('slack-client'),
     savoirinutile = serviceFactory.getService('savoirinutile'),
     citation = serviceFactory.getService('citations'),
     citationInverse = serviceFactory.getService('citationsinverse'),
-    pony = serviceFactory.getService('pony');
+    pony = serviceFactory.getService('pony'),
+    entities = require('entities');
 
-var slack = new Slack(token, true, true),
-    providersOption = {
+var token = process.env.SLACK_TOKEN,
+    limiter = new Bottleneck(1, 1000),
+    web = new WebClient(token),
+    that = this;
+
+var providersOption = {
         maxLength: 600
     };
 
+function init() {
+    if(process.env.SLACK_TOKEN) {
+        that.slack = new RtmClient(process.env.SLACK_TOKEN, {logLevel: 'warning'});
 
-slack.on('open', function () {
-    var channels = Object.keys(slack.channels)
-        .map(function (k) { return slack.channels[k]; })
-        .filter(function (c) { return c.is_member; })
-        .map(function (c) { return c.name; });
+        that.slack.on(CLIENT_EVENTS.RTM.DISCONNECT, function () {
+            console.error('DISCONNECT', arguments);
+        });
+        that.slack.on(CLIENT_EVENTS.RTM.WS_CLOSE, function () {
+            console.error('WS_CLOSE', arguments);
+        });
+        that.slack.on(CLIENT_EVENTS.RTM.WS_ERROR, function () {
+            console.error('WS_ERROR', arguments);
+        });
+        that.slack.on(CLIENT_EVENTS.RTM.ATTEMPTING_RECONNECT, function () {
+            console.error('ATTEMPTING_RECONNECT', arguments);
+        });
 
-    var groups = Object.keys(slack.groups)
-        .map(function (k) { return slack.groups[k]; })
-        .filter(function (g) { return g.is_open && !g.is_archived; })
-        .map(function (g) { return g.name; });
+        that.slack.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
+            that.rtmStartData = rtmStartData;
 
-    console.info('Welcome to Slack. You are ' + slack.self.name + ' of ' + slack.team.name);
+            var channels = Object.keys(that.rtmStartData.channels)
+                .map(function (k) { return that.rtmStartData.channels[k]; })
+                .filter(function (c) { return c.is_member; })
+                .map(function (c) { return c.name; });
+         
+            var groups = Object.keys(that.rtmStartData.groups)
+                .map(function (k) { return that.rtmStartData.groups[k]; })
+                .filter(function (g) { return g.is_open && !g.is_archived; })
+                .map(function (g) { return g.name; });
+         
+            console.info('Welcome to Slack. You are ' + that.rtmStartData.self.name + ' of ' + that.rtmStartData.team.name);
+         
+            if (channels.length > 0) {
+                console.info('You are in: ' + channels.join(', '));
+            }
+            else {
+                console.info('You are not in any channels.');
+            }
+         
+            if (groups.length > 0) {
+               console.info('As well as: ' + groups.join(', '));
+            }
+        });/*
+        
+        that.slack.on('error', function(error) {
+            console.error(error);
+        });
+*/
 
-    if (channels.length > 0) {
-        console.info('You are in: ' + channels.join(', '));
+        that.slack.on(RTM_EVENTS.MESSAGE, function (event) {
+            var channel = getChannelOrDMByID(event.channel);
+            if(channel && event.type === 'message') {
+                var message;
+                switch(event.subtype) {
+                    case undefined:
+                        // new message
+                        message = event;
+                        break;
+                    case 'message_changed':
+                        message = event.message;
+                        break;
+                    default:
+                        console.warn('event, RTM_EVENTS.MESSAGE with unmanaged event subtype ', event.subtype, JSON.stringify(event));
+                        break;
+                }
+                if(message && message.text) {
+                    processMessage(event.channel, entities.decodeHTML(message.text));
+                }
+            }
+        });
+
+        that.slack.start();
     }
-    else {
-        console.info('You are not in any channels.');
-    }
-
-    if (groups.length > 0) {
-       console.info('As well as: ' + groups.join(', '));
-    }
-});
-
-function sendMessages(channel, arrayToSend) {
-    setTimeout(function(e) {
-        var toSend = arrayToSend.shift();
-        if(toSend !== undefined) {
-            channel.send(toSend);
-        }
-        if(arrayToSend.length > 0) {
-            sendMessages(channel, arrayToSend);
-        }
-    }, 50);
 }
 
-slack.on('error', function(error) {
-    console.error(error);
-});
-
-slack.on('message', function(message) {
-    var channel = slack.getChannelGroupOrDMByID(message.channel);
-    var user = slack.getUserByID(message.user);
-
-    if (message.type === 'message') {
-        var futureFound,
-            text = message.text.toLowerCase();
-        switch(true) {
-            case /blague/.test(text):
-                futureFound = jokeProviders[Math.floor(Math.random() * jokeProviders.length)].get(providersOption)
-                    .then(function(data) {
-                        sendMessages(channel, data);
-                    });
-                break;
-            case /^savoir(?: inutile)?$/.test(text):
-            case /inutile/.test(text):
-                futureFound = savoirinutile.get()
-                    .then(function(data) {
-                        channel.send(data);
-                    });
-                break;
-            case /^excuses?(?: de devs?)?$/.test(text):
-            case /^devs?$/.test(text):
-                futureFound = excusesdedev.get()
-                    .then(function(data) {
-                        channel.send(data);
-                    });
-                break;
-            case /^citation$/.test(text):
-            case /^film$/.test(text):
-                futureFound = citation.get()
-                    .then(function(data) {
-                        sendMessages(channel, data);
-                    });
-                break;
-            case /^citation\s.+$/.test(text):
-            case /^film\s.+$/.test(text):
-                var matcher = text.match(/^citation\s(.+)$/) || text.match(/^film\s(.+)$/);
-                futureFound = citationInverse.get(matcher[1])
-                    .then(function(data) {
-                        sendMessages(channel, data);
-                    });
-                break;
-            case /^chaton$/.test(text):
-                futureFound = chatons.get()
-                    .then(function(data) {
-                        channel.postMessage({
-                            as_user: true,
-                            attachments: [
-                                {
-                                    fallback: 'chaton: ' + data,
-                                    'image_url': data
-                                }
-                            ]
-                        });
-                    });
-                break;
-            case /(?:pony|ponies|poney|cheval|horse)/.test(text):
-                futureFound = pony.get()
-                    .then(function(data) {
-                        channel.postMessage({
-                            as_user: true,
-                            attachments: [
-                                {
-                                    fallback: 'poney: ' + data,
-                                    'image_url': data
-                                }
-                            ]
-                        });
-                    });
-                break;
-            default:
-                futureFound = catchall.get(text)
-                    .then(function(data) {
-                        channel.postMessage({
-                            as_user: true,
-                            attachments: [
-                                {
-                                    fallback: 'nope: ' + data,
-                                    'image_url': data
-                                }
-                            ]
-                        });
-                    });
-                break;
-        }
-        futureFound.then(function() {
-            // Do nothing
-        }, function() {
-            poils.get(text)
+function processMessage(channel, message) {
+    var futureFound,
+        text = message.toLowerCase();
+    switch(true) {
+        case /blague/.test(text):
+            futureFound = jokeProviders[Math.floor(Math.random() * jokeProviders.length)].get(providersOption)
                 .then(function(data) {
-                    channel.send(data);
+                    sendMessages(channel, data);
                 });
-        });
+            break;
+        case /savoir/.test(text):
+        case /inutile/.test(text):
+            futureFound = savoirinutile.get()
+                .then(function(data) {
+                    sendMessages(channel, [data]);
+                });
+            break;
+        case /excuse/.test(text):
+        case /dev/.test(text):
+            futureFound = excusesdedev.get()
+                .then(function(data) {
+                    sendMessages(channel, [data]);
+                });
+            break;
+        case /^citation$/.test(text):
+        case /^film$/.test(text):
+            futureFound = citation.get()
+                .then(function(data) {
+                    sendMessages(channel, data);
+                });
+            break;
+        case /^citation\s.+$/.test(text):
+        case /^film\s.+$/.test(text):
+            var matcher = text.match(/^citation\s(.+)$/) || text.match(/^film\s(.+)$/);
+            futureFound = citationInverse.get(matcher[1])
+                .then(function(data) {
+                    sendMessages(channel, data);
+                });
+            break;
+        case /chaton/.test(text):
+            futureFound = chatons.get()
+                .then(function(data) {
+                    var data = {
+                        as_user: true,
+                        attachments: [
+                            {
+                                fallback: 'chaton: ' + data,
+                                'image_url': data
+                            }
+                        ]
+                    };
+                    web.chat.postMessage(channel, '', data, function() {});
+                });
+            break;
+        case /(?:pony|ponies|poney|cheval|horse)/.test(text):
+            futureFound = pony.get()
+                .then(function(data) {
+                    var data = {
+                        as_user: true,
+                        attachments: [
+                            {
+                                fallback: 'poney: ' + data,
+                                'image_url': data
+                            }
+                        ]
+                    };
+                    web.chat.postMessage(channel, '', data, function() {});
+                });
+            break;
+        default:
+            futureFound = catchall.get(text)
+                .then(function(data) {
+                    var data = {
+                        as_user: true,
+                        attachments: [
+                            {
+                                fallback: 'nope: ' + data,
+                                'image_url': data
+                            }
+                        ]
+                    };
+                    web.chat.postMessage(channel, '', data, function() {});
+                });
+            break;
     }
-});
+    futureFound.then(function() {
+        // Do nothing
+    }, function() {
+        poils.get(text)
+            .then(function(data) {
+                sendMessages(channel, [data]);
+            });
+    });
+}
 
-slack.login();
+function sendMessages(channelId, arrayToSend) {
+    limiter.submit(function(toSendArray, done) {
+        var toSend = toSendArray.shift();
+        if(toSend !== undefined) {
+            that.slack.sendMessage(toSend, channelId);
+        }
+        if(toSendArray.length > 0) {
+            sendMessages(channelId, toSendArray);
+        }
+        done();
+    }, arrayToSend, function() {
+        // done function, callback needed
+    });
+}
+
+function getChannelOrDMByID(channelId) {
+    var channel = _.find(that.rtmStartData.channels, { id: channelId });
+    var ims = _.find(that.rtmStartData.ims, { id: channelId });
+    var group = _.find(that.rtmStartData.groups, { id: channelId });
+    return channel || ims || group;
+}
+
+init();
