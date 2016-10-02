@@ -12,7 +12,8 @@ var Slack = require('slack-client'),
     excusesdedev = serviceFactory.getService('excusesdedev'),
     savoirinutile = serviceFactory.getService('savoirinutile'),
     citation = serviceFactory.getService('citations'),
-    citationInverse = serviceFactory.getService('citationsinverse');
+    citationInverse = serviceFactory.getService('citationsinverse'),
+    pony = serviceFactory.getService('pony');
 
 var slack = new Slack(token, true, true),
     providersOption = {
@@ -112,6 +113,20 @@ slack.on('message', function(message) {
                             attachments: [
                                 {
                                     fallback: 'chaton: ' + data,
+                                    'image_url': data
+                                }
+                            ]
+                        });
+                    });
+                break;
+            case /(?:pony|ponies|poney|cheval|horse)/.test(text):
+                futureFound = pony.get()
+                    .then(function(data) {
+                        channel.postMessage({
+                            as_user: true,
+                            attachments: [
+                                {
+                                    fallback: 'poney: ' + data,
                                     'image_url': data
                                 }
                             ]
