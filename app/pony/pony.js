@@ -15,16 +15,9 @@ const HEADERS = {
 };
 
 function getPonyPic() {
-	let deferred = q.defer();
-	getRandomPonyId.then((id) => {
-		getPonyPicFromId(id).then((picture) => {
-			deferred.resolve(picture)
-		});
-	}).catch((error) => {
-		deferred.reject(error);
+	return getRandomPonyId().then((id) => {
+		return getPonyPicFromId(id);
 	});
-
-	return deferred.promise;
 }
 
 function getPonyPicFromId(id) {
