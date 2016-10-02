@@ -119,7 +119,7 @@ slack.on('message', function(message) {
                         });
                     });
                 break;
-            case /^pony/.test(text):
+            case /(?:pony|ponies|poney|cheval|horse)/.test(text):
                 futureFound = pony.get()
                     .then(function(data) {
                         channel.postMessage({
