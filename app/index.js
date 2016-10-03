@@ -26,7 +26,8 @@ var token = process.env.SLACK_TOKEN,
 
 var providersOption = {
         maxLength: 600
-    };
+    },
+    muted = false;
 
 function init() {
     if(process.env.SLACK_TOKEN) {
@@ -93,7 +94,7 @@ function init() {
                         console.warn('event, RTM_EVENTS.MESSAGE with unmanaged event subtype ', event.subtype, JSON.stringify(event));
                         break;
                 }
-                if(message && message.text) {
+                if(message && message.text && !muted) {
                     processMessage(event.channel, entities.decodeHTML(message.text));
                 }
             }
@@ -171,6 +172,12 @@ function processMessage(channel, message) {
                     };
                     web.chat.postMessage(channel, '', data, function() {});
                 });
+            break;
+        case /(?:chut|tais[-\s]toi|ta gueule)/.test(text):
+            muted = true;
+            setTimeout(function() {
+                muted = false;
+            }, 1000*60)
             break;
         default:
             futureFound = catchall.get(text)
