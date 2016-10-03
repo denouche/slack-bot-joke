@@ -7,6 +7,7 @@ var RtmClient = require('@slack/client').RtmClient,
     RTM_EVENTS = require('@slack/client').RTM_EVENTS,
     WebClient = require('@slack/client').WebClient,
     Bottleneck = require('bottleneck'),
+    q = require('q'),
     catchall = require('./catchall/catchall-service.js'),
     serviceFactory = require('./servicefactory/service-factory.js'),
     jokeProviders = serviceFactory.getService('blagues'),
@@ -177,7 +178,8 @@ function processMessage(channel, message) {
             muted = true;
             setTimeout(function() {
                 muted = false;
-            }, 1000*60)
+            }, 1000*60);
+            futureFound = q.when();
             break;
         default:
             futureFound = catchall.get(text)
