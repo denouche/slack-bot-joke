@@ -18,6 +18,7 @@ var RtmClient = require('@slack/client').RtmClient,
     citation = serviceFactory.getService('citations'),
     citationInverse = serviceFactory.getService('citationsinverse'),
     pony = serviceFactory.getService('pony'),
+    kitten = serviceFactory.getService('kitten'),
     entities = require('entities');
 
 var token = process.env.SLACK_TOKEN,
@@ -167,6 +168,21 @@ function processMessage(channel, message) {
                         attachments: [
                             {
                                 fallback: 'poney: ' + data,
+                                'image_url': data
+                            }
+                        ]
+                    };
+                    web.chat.postMessage(channel, '', data, function() {});
+                });
+            break;
+        case /(?:kitten|cat|chat|god)/.test(text): 
+            futureFound = kitten.get()
+                .then(function(data) {
+                    var data = {
+                        as_user: true,
+                        attachments: [
+                            {
+                                fallback: 'kitten: ' + data,
                                 'image_url': data
                             }
                         ]
