@@ -19,6 +19,7 @@ var RtmClient = require('@slack/client').RtmClient,
     citationInverse = serviceFactory.getService('citationsinverse'),
     pony = serviceFactory.getService('pony'),
     kitten = serviceFactory.getService('kitten'),
+    estcequecestbientotleweekend = serviceFactory.getService('estcequecestbientotleweekend'),
     entities = require('entities');
 
 var token = process.env.SLACK_TOKEN,
@@ -188,6 +189,12 @@ function processMessage(channel, message) {
                         ]
                     };
                     web.chat.postMessage(channel, '', data, function() {});
+                });
+            break;
+	case /(?:week-?end)/.test(text):
+            futureFound = estcequecestbientotleweekend.get()
+                .then(function(data) {
+                    sendMessages(channel, data);
                 });
             break;
         case /(?:chut|tais[-\s]toi|ta gueule)/.test(text):
