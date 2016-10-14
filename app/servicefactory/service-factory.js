@@ -15,7 +15,8 @@ var existingServices = {
     'citations': require('../kaakook/kaakook-service.js'),
     'citationsinverse': require('../kaakookinverse/kaakookinverse-service.js'),
     'pony': require('../pony/pony.js'),
-    'kitten': require('../kitten/thecatapi-service.js')
+    'kitten': require('../kitten/thecatapi-service.js'),
+    'estcequecestbientotleweekend': require('../estcequecestbientotleweekend/estcequecestbientotleweekend-service.js')
 };
 
 function getMock() {
