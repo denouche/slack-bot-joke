@@ -1,9 +1,5 @@
-let htmlparser = require('htmlparser2'),
-    request = require('request'),
-    q = require('q'),
-    _ = require('lodash'),
-    util = require('util'),
-    EventEmitter = require('events').EventEmitter;
+let _ = require('lodash'),
+    Service = require('../Service');
 
 const URL = 'http://thecatapi.com/api/images/get?format=xml'
 const HEADERS = {
@@ -16,68 +12,37 @@ const HEADERS = {
 };
 const MATCHING_WORS = ['chat', 'cat', 'kitten', 'god'];
 
-let self;
+class TheCatApi extends Service {
 
-let TheCatApi = function () {
-    self = this;
-    _.forEach(MATCHING_WORS, (word) => {
-        this.on(word, (channel) => {
-            manageNotification(channel);
+    manageNotification(channel) {
+        return super.getResponse().then((message) => {
+            super.emit('sendUrl', message, channel, 'TheCatApi');
         });
-    });
-};
+    }
 
-util.inherits(TheCatApi, EventEmitter);
+    matches(elem) {
+        return elem.name === 'url';
+    }
 
-function manageNotification(channel) {
-    return getResponse().then((message) => {
-        self.emit('sendUrl', message, channel, 'thecatapi');
-    });
-}
+    hasData(data) {
+        return data.length > 0 && data[0].children.length > 0;
+    }
 
-function getResponse() {
-    let deferred = q.defer();
-    request({
-        url: URL,
-        method: 'GET',
-        gzip: true,
-        headers: HEADERS
-    }, (error, response, body) => {
-        console.info('response from "thecatapi"', response.statusCode);
-        if (!error && response.statusCode == 200) {
-            let domUtils = require('htmlparser2').DomUtils;
-            let handler = new htmlparser.DomHandler((err, dom) => {
-                let image = domUtils.findAll((elem) => {
-                    if (matches(elem)) {
-                        return true;
-                    }
-                    return false;
-                }, dom);
+    resolveData(data) {
+        return data[0].children[0].data;
+    }
 
-                if (hasData(image)) {
-                    deferred.resolve(resolveData(image));
-                } else {
-                    deferred.reject();
-                }
-            });
-            new htmlparser.Parser(handler).parseComplete(body);
-        } else {
-            deferred.reject();
-        }
-    });
-    return deferred.promise;
-}
+    getUrl() {
+        return URL;
+    }
 
-function matches(elem) {
-    return elem.name === 'url';
-}
+    getHeaders() {
+        return HEADERS;
+    }
 
-function hasData(data) {
-    return data.length > 0 && data[0].children.length > 0;
-}
-
-function resolveData(data) {
-    return data[0].children[0].data;
+    getMatchingWords() {
+        return MATCHING_WORS;
+    }
 }
 
 module.exports = TheCatApi;
