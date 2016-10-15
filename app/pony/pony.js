@@ -2,7 +2,9 @@ let htmlparser = require('htmlparser2'),
 	request = require('request'),
 	q = require('q'),
 	_ = require('lodash'),
-	entities = require('entities');
+	entities = require('entities'),
+	util = require('util'),
+	EventEmitter = require('events').EventEmitter;
 
 const PONY_API_URL = "https://derpibooru.org";
 const HEADERS = {
@@ -14,8 +16,26 @@ const HEADERS = {
 	'Pragma': 'no-cache',
 	'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.155 Safari/537.36'
 };
+const MATCHING_WORS = ['pony', 'ponies', 'poney', 'cheval', 'horse'];
 
-function getPonyPic() {
+let Pony = function () {
+	self = this;
+	_.forEach(MATCHING_WORS, (word) => {
+		this.on(word, (channel) => {
+			manageNotification(channel);
+		});
+	});
+};
+
+util.inherits(Pony, EventEmitter);
+
+function manageNotification(channel) {
+	return getResponse().then((message) => {
+		self.emit('sendUrl', message, channel, 'pony');
+	});
+}
+
+function getResponse() {
 	return getRandomPonyId().then((id) => {
 		return getPonyPicFromId(id);
 	});
@@ -30,24 +50,18 @@ function getPonyPicFromId(id) {
 		headers: HEADERS
 	}, (error, response, body) => {
 		console.info('response "derpibooru" image', response.statusCode);
-		if(!error && response.statusCode == 200) {
+		if (!error && response.statusCode == 200) {
 			let domUtils = require('htmlparser2').DomUtils;
 			let handler = new htmlparser.DomHandler((err, dom) => {
 				let img = domUtils.findAll((elem) => {
-					if(elem.attribs 
-						&& elem.attribs.class 
-						&& _.split(elem.attribs.class, /\s+/).indexOf('image-show') !== -1) {
+					if (matches(elem)) {
 						return true;
 					}
 					return false;
 				}, dom);
 
-				if(img.length > 0
-					&& img[0].attribs
-					&& img[0].attribs['data-uris']) {
-					var urls = entities.decodeHTML(img[0].attribs['data-uris']),
-						urlJson = JSON.parse(urls);
-					deferred.resolve(`https:${urlJson.small}`);
+				if (hasData(img)) {
+					deferred.resolve(resolveData(img));
 				}
 				else {
 					deferred.reject();
@@ -65,20 +79,38 @@ function getPonyPicFromId(id) {
 function getRandomPonyId() {
 	let deferred = q.defer();
 	request({
-	    url: `${PONY_API_URL}/search/index.json?q=safe%2Csolo&random_image=y`,
-	    method: 'GET',
-	    gzip: true,
-	    json: true
+		url: `${PONY_API_URL}/search/index.json?q=safe%2Csolo&random_image=y`,
+		method: 'GET',
+		gzip: true,
+		json: true
 	}, (error, response, body) => {
 		console.info('response "derpibooru" ID ', response.statusCode);
-	    if(!error && response.statusCode == 200) {
-	    	deferred.resolve(body.id);
-	    }
-	    else {
-	    	deferred.reject();
-	    }
+		if (!error && response.statusCode == 200) {
+			deferred.resolve(body.id);
+		}
+		else {
+			deferred.reject();
+		}
 	});
 	return deferred.promise;
 }
 
-exports.get = getPonyPic;
+function matches(elem) {
+	return elem.attribs
+		&& elem.attribs.class
+		&& _.split(elem.attribs.class, /\s+/).indexOf('image-show') !== -1;
+}
+
+function hasData(data) {
+	return data.length > 0
+		&& data[0].attribs
+		&& data[0].attribs['data-uris'];
+}
+
+function resolveData(data) {
+	var urls = entities.decodeHTML(data[0].attribs['data-uris']),
+		urlJson = JSON.parse(urls);
+	return `https:${urlJson.small}`;
+}
+
+module.exports = Pony;

@@ -1,42 +1,36 @@
 var q = require('q'),
     _ = require('lodash'),
-    services = process.env.BOT_SERVICES ? process.env.BOT_SERVICES.split(',') : null;
+    services = process.env.BOT_SERVICES ? process.env.BOT_SERVICES.split(',') : null,
+    WeekEnd = require('../estcequecestbientotleweekend/estcequecestbientotleweekend-service.js'),
+    SavoirInutile = require('../savoirinutile/savoirinutile-service.js'),
+    ExcusesDeDev = require('../excusesdedev/excusesdedev-service.js'),
+    TheCatApi = require('../kitten/thecatapi-service.js'),
+    Pony = require('../pony/pony.js'),
+    Chatons = require('../chatons/ditesleavecdeschatons-service.js'),
+    Joke = require('../jokes/jokes-service.js'),
+    Citation = require('../kaakook/kaakook-service.js'),
+    CitationInverse = require('../kaakookinverse/kaakookinverse-service.js');
 
 var existingServices = {
-    'blagues': [
-        require('../jokes/providers/humour-blague-service.js'),
-        require('../jokes/providers/marrez-vous-service.js'),
-        require('../jokes/providers/labanane-service.js')
-    ],
-    'chatons': require('../chatons/ditesleavecdeschatons-service.js'),
-    'poils': require('../poils/poils-service.js'),
-    'excusesdedev': require('../excusesdedev/excusesdedev-service.js'),
-    'savoirinutile': require('../savoirinutile/savoirinutile-service.js'),
-    'citations': require('../kaakook/kaakook-service.js'),
-    'citationsinverse': require('../kaakookinverse/kaakookinverse-service.js'),
-    'pony': require('../pony/pony.js'),
-    'kitten': require('../kitten/thecatapi-service.js'),
-    'estcequecestbientotleweekend': require('../estcequecestbientotleweekend/estcequecestbientotleweekend-service.js')
+    'estcequecestbientotleweekend': new WeekEnd(),
+    'savoirinutile': new SavoirInutile(),
+    'excusesdedev': new ExcusesDeDev(),
+    'kitten': new TheCatApi(),
+    'pony': new Pony(),
+    'chatons': new Chatons(),
+    'blagues': new Joke(),
+    'citations': new Citation(),
+    'citationsinverse': new CitationInverse()
 };
 
-function getMock() {
-    return {
-        get: function() {
-            var deferred = q.defer();
-            deferred.reject();
-            return deferred.promise;
+function getServices() {
+    let result = []
+    _.forEach(services, (service) => {
+        if(existingServices[service]) {
+            result.push(existingServices[service])
         }
-    };
+    });
+    return result;
 }
 
-function getService(serviceName) {
-    if (services && !_.includes(services, serviceName)) {
-        if (_.isArray(existingServices[serviceName])){
-            return [getMock()];
-        }
-        return getMock();
-    }
-    return existingServices[serviceName];
-}
-
-exports.getService = getService;
+exports.getServices = getServices;
