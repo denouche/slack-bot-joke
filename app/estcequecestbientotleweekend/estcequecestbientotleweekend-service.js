@@ -1,9 +1,6 @@
-let htmlparser = require('htmlparser2'),
-    request = require('request'),
-    q = require('q'),
-    _ = require('lodash'),
-    util = require('util'),
-    EventEmitter = require('events').EventEmitter;
+let _ = require('lodash'),
+    Service = require('../Service');
+
 
 const URL = 'http://estcequecestbientotleweekend.fr/';
 const HEADERS = {
@@ -14,65 +11,41 @@ const HEADERS = {
     'Pragma': 'no-cache',
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.155 Safari/537.36'
 };
+const MATCHING_WORS = ['weekend', 'week-end'];
 
-let self;
+class WeekEnd extends Service {
 
-let WeekEnd = function () {
-    self = this;
-    this.on('weekend', (channel) => {
-        getResponse().then(function (message) {
-            self.emit('sendMessage', message, channel);
+    manageNotification(channel) {
+        return super.getResponse().then((message) => {
+            super.emit('sendMessage', message, channel, 'WeekEnd');
         });
-    });
-};
+    }
 
-util.inherits(WeekEnd, EventEmitter);
+    matches(elem) {
+        return elem.type === "tag" && elem.name === 'p' && elem.attribs.class == 'msg';
+    }
 
-function getResponse() {
-    let deferred = q.defer();
-    request({
-        url: URL,
-        method: 'GET',
-        gzip: true,
-        headers: HEADERS
-    }, function (error, response, body) {
-        console.info('response from "estcequecestbientotleweekend"', response.statusCode);
-        if (!error && response.statusCode == 200) {
-            let domUtils = require('htmlparser2').DomUtils;
-            let handler = new htmlparser.DomHandler((err, dom) => {
-                let image = domUtils.findAll((elem) => {
-                    if (matches(elem)) {
-                        return true;
-                    }
-                    return false;
-                }, dom);
+    hasData(data) {
+        return data.length > 0 && data[0].children.length > 0;
+    }
 
-                if (hasData(image)) {
-                    deferred.resolve(resolveData(image));
-                } else {
-                    deferred.reject();
-                }
-            });
-            new htmlparser.Parser(handler).parseComplete(body);
-        } else {
-            deferred.reject();
-        }
-    });
-    return deferred.promise;
-}
+    resolveData(data) {
+        let response = data[0].children[0].data;
+        response = response.replace(/(?:\n|\r|\t|  +)/g, '');
+        return _.castArray(response);
+    }
 
-function matches(elem) {
-    return elem.type === "tag" && elem.name === 'p' && elem.attribs.class == 'msg';
-}
+    getUrl() {
+        return URL;
+    }
 
-function hasData(data) {
-    return data.length > 0 && data[0].children.length > 0;
-}
+    getHeaders() {
+        return HEADERS;
+    }
 
-function resolveData(data) {
-    let response = data[0].children[0].data;
-    response = response.replace(/(?:\n|\r|\t|  +)/g, '');
-    return _.castArray(response);
+    getMatchingWords() {
+        return MATCHING_WORS;
+    }
 }
 
 module.exports = WeekEnd;
