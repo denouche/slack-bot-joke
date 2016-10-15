@@ -105,9 +105,14 @@ function init() {
                             config = matcher[1];
                         }
 
+                        let receiver = 0;
                         _.forEach(services, function (service) {
+                            receiver += service.listenerCount(text);
                             service.emit(text, event.channel, config);
                         });
+                        if(receiver === 0) {
+                            serviceFactory.getService('poils').emit('poils', event.channel, text);
+                        }
                     }
                 }
             }

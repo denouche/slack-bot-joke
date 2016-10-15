@@ -9,7 +9,8 @@ var q = require('q'),
     Chatons = require('../chatons/ditesleavecdeschatons-service.js'),
     Joke = require('../jokes/jokes-service.js'),
     Citation = require('../kaakook/kaakook-service.js'),
-    CitationInverse = require('../kaakookinverse/kaakookinverse-service.js');
+    CitationInverse = require('../kaakookinverse/kaakookinverse-service.js'),
+    Poils = require('../poils/poils-service.js');
 
 var existingServices = {
     'estcequecestbientotleweekend': new WeekEnd(),
@@ -20,8 +21,16 @@ var existingServices = {
     'chatons': new Chatons(),
     'blagues': new Joke(),
     'citations': new Citation(),
-    'citationsinverse': new CitationInverse()
+    'citationsinverse': new CitationInverse(),
+    'poils': new Poils()
 };
+
+function getService(name) {
+    if(_.indexOf(services, name) !== -1) {
+        return existingServices[name];
+    }
+    return null;
+}
 
 function getServices() {
     let result = []
@@ -33,4 +42,5 @@ function getServices() {
     return result;
 }
 
+exports.getService = getService;
 exports.getServices = getServices;

@@ -1,5 +1,7 @@
 var q = require('q'),
-    _ = require('lodash');
+    _ = require('lodash'),
+    util = require('util'),
+    EventEmitter = require('events').EventEmitter;
 
 var dict = {
     dos: [
@@ -58,20 +60,29 @@ var dict = {
     ]
 };
 
-function cleanWord(word) {
-    return word.replace(/\s*[\?!\.]*$/, '');
-}
+let self;
+
+let Poils = function () {
+    self = this;
+    this.on('poils', (channel, input) => {
+        getResponse(input).then(function (message) {
+            self.emit('sendMessage', message, channel);
+        });
+    });
+};
+
+util.inherits(Poils, EventEmitter);
 
 function getResponse(word) {
     var deferred = q.defer(),
         textToTest = cleanWord(word);
-    var foundKey = _.findKey(dict, function(elements) {
-        return _.some(elements, function(e) {
+    var foundKey = _.findKey(dict, function (elements) {
+        return _.some(elements, function (e) {
             return _.endsWith(textToTest, e);
         })
     });
-    if(foundKey) {
-        deferred.resolve("Poils au " + foundKey);
+    if (foundKey) {
+        deferred.resolve(_.castArray("Poils au " + foundKey));
     }
     else {
         deferred.reject();
@@ -79,4 +90,8 @@ function getResponse(word) {
     return deferred.promise;
 }
 
-exports.get = getResponse;
+function cleanWord(word) {
+    return word.replace(/\s*[\?!\.]*$/, '');
+}
+
+module.exports = Poils;
