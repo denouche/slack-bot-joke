@@ -1,47 +1,67 @@
 var google = require('google'),
     q = require('q'),
     _ = require('lodash'),
-    kaakook = require('../kaakook/kaakook-service.js');
+    Citation = require('../kaakook/kaakook-service.js'),
+    util = require('util'),
+    Service = require('../Service');
 
 google.resultsPerPage = 10;
 
-function searchGoogle(citation) {
-    var deferred = q.defer();
-    google('site:kaakook.fr ' + citation, function (err, next, links) {
-        if (err) {
-            console.error(err);
-            deferred.reject();
-        }
-        else {
-            if(links.length === 0) {
-                deferred.resolve();
-            }
-            else {
-                var result =_.find(links, function(link) {
-                    return /^http:\/\/www\.kaakook\.fr\/citation-.*/.test(link.link);
-                });
-                if(result) {
-                    deferred.resolve(result.link);
+
+const MATCHING_WORS = ['citationinverse'];
+
+class CitationInverse extends Service {
+
+    constructor() {
+        super('sendMessage');
+    }
+
+    getResponse(citation) {
+        return this.searchGoogle(citation)
+            .then(function (url) {
+                if (url) {
+                    return new Citation().getResponse(url);
                 }
                 else {
-                    deferred.resolve();
+                    return ["Désolé, je n'ai pas trouvé le film correspondant ..."];
                 }
-            }
-        }
-    });
-    return deferred.promise;
-}
+            });
+    }
 
-function findCitation(citation) {
-    return searchGoogle(citation)
-        .then(function(url) {
-            if(url) {
-                return kaakook.get(url);
+    searchGoogle(citation) {
+        var deferred = q.defer();
+        google('site:kaakook.fr ' + citation, function (err, next, links) {
+            if (err) {
+                console.error(err);
+                deferred.reject();
             }
             else {
-                return ["Désolé, je n'ai pas trouvé le film correspondant ..."];
+                if (links.length === 0) {
+                    deferred.resolve();
+                }
+                else {
+                    var result = _.find(links, function (link) {
+                        return /^http:\/\/www\.kaakook\.fr\/citation-.*/.test(link.link);
+                    });
+                    if (result) {
+                        deferred.resolve(result.link);
+                    }
+                    else {
+                        deferred.resolve();
+                    }
+                }
             }
         });
+        return deferred.promise;
+    }
+
+    getMatchingWords() {
+        return MATCHING_WORS;
+    }
+
+    canManage(text) {
+        return /^(citation|film)\s.+$/.test(text);
+    }
 }
 
-exports.get = findCitation;
+module.exports = CitationInverse;
