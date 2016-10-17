@@ -100,7 +100,7 @@ function init() {
                         setTimeout(function () {
                             muted = false;
                         }, 1000 * 60);
-                        sendMessages(event.channel, _.castArray('You are right, it is better that I should take a nap.'));
+                        sendMessages(event.channel, _.castArray('Vous avez sans doute raison, il est temps pour moi de faire une sieste.'));
                     } else {
                         let service = _.find(services, (service) => {
                             return service.canManage(text);
