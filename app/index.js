@@ -111,42 +111,42 @@ function processMessage(channel, message) {
     var futureFound,
         text = message.toLowerCase();
     switch(true) {
-        case /blague/.test(text):
+        case /\bblague\b/.test(text):
             futureFound = jokeProviders[Math.floor(Math.random() * jokeProviders.length)].get(providersOption)
                 .then(function(data) {
                     sendMessages(channel, data);
                 });
             break;
-        case /savoir/.test(text):
-        case /inutile/.test(text):
+        case /\bsavoir\b/.test(text):
+        case /\binutile\b/.test(text):
             futureFound = savoirinutile.get()
                 .then(function(data) {
                     sendMessages(channel, [data]);
                 });
             break;
-        case /excuse/.test(text):
-        case /dev/.test(text):
+        case /\bexcuses?\b/.test(text):
+        case /\bdev(?:eloper)?\b/.test(text):
             futureFound = excusesdedev.get()
                 .then(function(data) {
                     sendMessages(channel, [data]);
                 });
             break;
-        case /^citation$/.test(text):
-        case /^film$/.test(text):
+        case /\bcitation\b/.test(text):
+        case /\bfilm\b/.test(text):
             futureFound = citation.get()
                 .then(function(data) {
                     sendMessages(channel, data);
                 });
             break;
-        case /^citation\s.+$/.test(text):
-        case /^film\s.+$/.test(text):
+        case /\bcitation\s.+$/.test(text):
+        case /\bfilm\s.+$/.test(text):
             var matcher = text.match(/^citation\s(.+)$/) || text.match(/^film\s(.+)$/);
             futureFound = citationInverse.get(matcher[1])
                 .then(function(data) {
                     sendMessages(channel, data);
                 });
             break;
-        case /chaton/.test(text):
+        case /\bchaton\b/.test(text):
             futureFound = chatons.get()
                 .then(function(data) {
                     var data = {
@@ -161,7 +161,7 @@ function processMessage(channel, message) {
                     web.chat.postMessage(channel, '', data, function() {});
                 });
             break;
-        case /(?:pony|ponies|poney|cheval|horse)/.test(text):
+        case /\b(?:pony|ponies|poney|cheval|horse)\b/.test(text):
             futureFound = pony.get()
                 .then(function(data) {
                     var data = {
@@ -176,7 +176,7 @@ function processMessage(channel, message) {
                     web.chat.postMessage(channel, '', data, function() {});
                 });
             break;
-        case /(?:kitten|cat|chat|god)/.test(text): 
+        case /\b(?:kitten|cat|chat|god)\b/.test(text): 
             futureFound = kitten.get()
                 .then(function(data) {
                     var data = {
@@ -191,17 +191,17 @@ function processMessage(channel, message) {
                     web.chat.postMessage(channel, '', data, function() {});
                 });
             break;
-	case /(?:week-?end)/.test(text):
+	case /\b(?:week-?end)\b/.test(text):
             futureFound = estcequecestbientotleweekend.get()
                 .then(function(data) {
                     sendMessages(channel, data);
                 });
             break;
-        case /(?:chut|tais[-\s]toi|ta gueule)/.test(text):
+        case /\b(?:chut|tais[-\s]toi|ta gueule)\b/.test(text):
             muted = true;
             setTimeout(function() {
                 muted = false;
-            }, 1000*60);
+            }, 10000*60);
             futureFound = q.when();
             break;
         default:
