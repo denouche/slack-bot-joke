@@ -1,5 +1,6 @@
 var q = require('q'),
-    _ = require('lodash');
+    _ = require('lodash'),
+    Service = require('../service');
 
 var dict = {
     dos: [
@@ -58,25 +59,39 @@ var dict = {
     ]
 };
 
-function cleanWord(word) {
-    return word.replace(/\s*[\?!\.]*$/, '');
+const MATCHING_WORS = ['poils'];
+
+class Poils extends Service {
+
+    constructor() {
+        super('sendMessage');
+    }
+
+    getResponse(word) {
+        console.log('getResponse', word);
+        var deferred = q.defer(),
+            textToTest = this.cleanWord(word);
+        var foundKey = _.findKey(dict, function (elements) {
+            return _.some(elements, function (e) {
+                return _.endsWith(textToTest, e);
+            })
+        });
+        if (foundKey) {
+            deferred.resolve(_.castArray("Poils au " + foundKey));
+        }
+        else {
+            deferred.reject();
+        }
+        return deferred.promise;
+    }
+
+    cleanWord(word) {
+        return word.replace(/\s*[\?!\.]*$/, '');
+    }
+
+    getMatchingWords() {
+        return MATCHING_WORS;
+    }
 }
 
-function getResponse(word) {
-    var deferred = q.defer(),
-        textToTest = cleanWord(word);
-    var foundKey = _.findKey(dict, function(elements) {
-        return _.some(elements, function(e) {
-            return _.endsWith(textToTest, e);
-        })
-    });
-    if(foundKey) {
-        deferred.resolve("Poils au " + foundKey);
-    }
-    else {
-        deferred.reject();
-    }
-    return deferred.promise;
-}
-
-exports.get = getResponse;
+module.exports = Poils;
