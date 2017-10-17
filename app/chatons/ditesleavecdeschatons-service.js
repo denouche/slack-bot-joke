@@ -1,6 +1,6 @@
 var iconv = require('iconv-lite'),
 	_ = require('lodash'),
-	Service = require('../Service');
+	Service = require('../service');
 
 iconv.extendNodeEncodings();
 

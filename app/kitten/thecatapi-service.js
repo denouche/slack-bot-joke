@@ -1,5 +1,5 @@
 let _ = require('lodash'),
-    Service = require('../Service');
+    Service = require('../service');
 
 const URL = 'http://thecatapi.com/api/images/get?format=xml'
 const HEADERS = {

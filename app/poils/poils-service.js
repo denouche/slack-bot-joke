@@ -1,6 +1,6 @@
 var q = require('q'),
     _ = require('lodash'),
-    Service = require('../Service');
+    Service = require('../service');
 
 var dict = {
     dos: [

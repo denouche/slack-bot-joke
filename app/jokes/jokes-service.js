@@ -1,4 +1,4 @@
-let Service = require('../Service'),
+let Service = require('../service'),
 
     providers = [
         require('./providers/humour-blague-service.js'),

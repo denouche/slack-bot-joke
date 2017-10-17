@@ -2,7 +2,7 @@ var htmlparser = require('htmlparser2'),
 	request = require('request'),
 	q = require('q'),
 	_ = require('lodash'),
-	Service = require('../Service');
+	Service = require('../service');
 
 const URL = 'http://www.kaakook.fr/'
 const HEADERS = {

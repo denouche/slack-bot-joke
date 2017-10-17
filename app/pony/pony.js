@@ -1,6 +1,6 @@
 let _ = require('lodash'),
 	entities = require('entities'),
-	Service = require('../Service');
+	Service = require('../service');
 
 const PONY_API_URL = "https://derpibooru.org";
 const HEADERS = {

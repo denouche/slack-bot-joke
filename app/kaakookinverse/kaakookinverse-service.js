@@ -3,7 +3,7 @@ var google = require('google'),
     _ = require('lodash'),
     Citation = require('../kaakook/kaakook-service.js'),
     util = require('util'),
-    Service = require('../Service');
+    Service = require('../service');
 
 google.resultsPerPage = 10;
 

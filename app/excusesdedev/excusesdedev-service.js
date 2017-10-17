@@ -1,5 +1,5 @@
 var _ = require('lodash'),
-	Service = require('../Service');
+	Service = require('../service');
 
 const URL = 'http://www.excusesdedev.com/';
 const HEADERS = {
