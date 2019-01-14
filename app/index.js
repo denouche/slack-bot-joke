@@ -33,8 +33,8 @@ var providersOption = {
     muted = false;
 
 function init() {
-    if(process.env.SLACK_TOKEN) {
-        that.slack = new RtmClient(process.env.SLACK_TOKEN, {logLevel: 'warning'});
+    if(token) {
+        that.slack = new RtmClient(token, {logLevel: 'warning'});
 
         that.slack.on(CLIENT_EVENTS.RTM.DISCONNECT, function () {
             console.error('DISCONNECT', arguments);
